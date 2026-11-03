@@ -501,6 +501,36 @@ html{background:#0A1230;}
 .acc-privacy p{margin:0 0 12px;line-height:1.65;font-size:14px}
 .acc-privacy a{color:var(--gold-light)}
 @media (max-width:640px){.acc-banner{flex-wrap:wrap}.acc-banner .spacer{display:none}}
+/* ---- v3.3 / PAMG v1.9 : photo de profil (jamais à la place du logo) ---- */
+.acc-avatar{--av:36px;width:var(--av);height:var(--av);border-radius:50%;flex:none;display:inline-flex;align-items:center;justify-content:center;overflow:hidden;background:var(--av-bg);border:1.5px solid var(--av-ring);color:var(--av-ink);box-shadow:0 3px 10px rgba(0,0,0,.3)}
+.acc-avatar img{width:100%;height:100%;object-fit:cover;display:block}
+.acc-avatar .acc-ini{font:700 calc(var(--av) * .4)/1 var(--font-title);letter-spacing:.02em}
+.acc-avatar .i,.acc-avatar svg{width:55%;height:55%}
+.acc-avatar.sm{--av:38px}.acc-avatar.xl{--av:84px;border-width:2.5px}
+.acc-chip{display:flex;align-items:center;gap:11px;margin:0 14px 10px;padding:9px 12px;border-radius:14px;border:1px solid var(--border);background:rgba(255,255,255,.04);color:inherit;font:inherit;text-align:left;cursor:pointer;transition:background var(--tr),border-color var(--tr)}
+.acc-chip:hover,.acc-chip.is-active{background:rgba(232,181,44,.1);border-color:var(--gold-dim,rgba(232,181,44,.4))}
+.acc-chip-txt{display:flex;flex-direction:column;min-width:0;gap:3px}
+.acc-chip-txt b{font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px}
+.acc-chip-txt small{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--text-muted)}
+.acc-chip-txt .acc-dot{width:7px;height:7px}
+.m-acc{display:none}
+@media (max-width:860px){
+  .sidebar .acc-chip{display:none}
+  .m-acc{display:inline-flex;position:absolute;top:calc(8px + env(safe-area-inset-top));right:12px;z-index:46;padding:0;border:0;background:none;border-radius:50%;cursor:pointer}
+  .m-lang-toggle{right:60px!important}
+}
+@media print{.m-acc,.acc-chip{display:none!important}}
+.acc-me{display:flex;align-items:center;gap:16px;margin-bottom:12px}
+.acc-me-txt{min-width:0}
+.acc-me-name{font-family:var(--font-title);font-size:20px;font-weight:600;line-height:1.2;margin-bottom:2px}
+.acc-me .sec{margin:0 0 8px;word-break:break-all}
+.acc-photo-btns{gap:6px;flex-wrap:wrap}
+.acc-again{color:var(--gold-light)}
+.acc-banner-btns{display:inline-flex;gap:8px;flex-wrap:wrap}
+@media (max-width:640px){.acc-banner-btns{width:100%}.acc-banner-btns .btn{flex:1;justify-content:center}}
+.acc-banner{position:relative}
+@media (max-width:640px){.acc-banner > .btn-icon{position:absolute;top:8px;right:8px}}
+:root{--av-bg:radial-gradient(circle at 50% 30%,#1B2A5E 0%,#0A1230 60%,#000 100%);--av-ring:#E8B52C;--av-ink:#E8B52C}
 </style>
 </head>
 <body>
@@ -948,7 +978,7 @@ const FEEDBACK_URL = '';
 const STORE_KEY = 'pamg_meditons_v1';   // clé propre à l’édition de l’Église
 const OLD_KEY = '';                      // pas de reprise des données de l’app de base
 const BIBLE_DB = 'pamg_bibles';
-const APP_VERSION = '1.8';
+const APP_VERSION = '1.9';
 const PHOTO_DB = 'pamg_photos';       // photos des rubriques d’enseignements (IndexedDB)
 
 /* ---------- Livres de la Bible : [code, nom, testament, abréviations] ---------- */
@@ -2990,8 +3020,8 @@ VIEWS.settings = () => {
     <div class="panel" style="grid-column:1/-1" id="set-lang-panel"><h2 style="margin-bottom:6px">${ic('globe')} ${tr('Langue', 'Language')} · ${tr('Language', 'Langue')}</h2><p class="sec" style="font-size:13.5px;margin-bottom:14px;line-height:1.6">${tr('Choisis la langue de l’application. Tes méditations, notes et réglages restent les mêmes. Toutes les Bibles (françaises et anglaises) restent disponibles dans les deux langues.', 'Choose the app’s language. Your meditations, notes and settings stay the same. All the Bibles (French and English) remain available in both languages.')}</p>${langPickerHTML()}</div>
     <div class="panel"><h2 style="margin-bottom:16px">${tr('Identité', 'Identity')}</h2>
       <div class="field"><label class="label">${tr('Ton prénom', 'Your first name')}</label><input class="input" id="set-name" value="${esc(st.name)}" placeholder="${tr('Pour que le coach te salue', 'So the coach can greet you')}"></div>
-      <div class="field"><label class="label">Logo</label><div class="row"><div class="brand-mark" style="width:64px;height:64px;border-radius:16px">${logoHTML()}</div>
-        <label class="btn btn-secondary">${ic('upload')} ${tr('Choisir une image', 'Choose an image')}<input type="file" accept="image/*" id="set-logo" class="hidden"></label>${st.logo ? `<button class="btn btn-ghost" data-action="reset-logo">${tr('Retirer', 'Remove')}</button>` : ''}</div><div class="help">${tr('PNG, JPG ou SVG. Il s’affiche dans la barre latérale.', 'PNG, JPG or SVG. It is shown in the sidebar.')}</div></div>
+      <div class="field"><label class="label">${tr('Logo de l’application', 'App logo')}</label><div class="row"><div class="brand-mark" style="width:64px;height:64px;border-radius:16px">${logoHTML()}</div>
+        <label class="btn btn-secondary">${ic('upload')} ${tr('Choisir une image', 'Choose an image')}<input type="file" accept="image/*" id="set-logo" class="hidden"></label>${st.logo ? `<button class="btn btn-ghost" data-action="reset-logo">${tr('Retirer', 'Remove')}</button>` : ''}</div><div class="help">${tr('PNG, JPG ou SVG. Il remplace le logo dans la barre latérale. Pour ta photo à toi, va dans « Mon compte » › Photo de profil.', 'PNG, JPG or SVG. It replaces the logo in the sidebar. For your own photo, go to “My account” › Profile photo.')}</div></div>
     </div>
     <div class="panel"><h2 style="margin-bottom:16px">${tr('Rappels quotidiens', 'Daily reminders')}</h2>
       <div class="field"><label class="label">${tr('Heure de ton rendez-vous', 'Time of your appointment')}</label><input class="input" type="time" id="set-hour" value="${pad(st.reminderHour)}:${pad(st.reminderMin || 0)}" style="width:150px"></div>
@@ -3367,7 +3397,11 @@ if ('serviceWorker' in navigator && isOnline()) {
 window.MED_CLOUD = {"url": "https://wtzhreshvmuifsoarmqm.supabase.co", "key": "sb_publishable_ibA-ADodfQ_QQu8RmvPK0g_156IE6UX", "app": "pamg", "name": "Méditons Ensemble · Pray and Move Generation", "contact": "cnanmenibondja@gmail.com", "oldOrigin": "https://cnanmenibondja-spec.github.io"};
 'use strict';
 /* =====================================================================
-   COMPTES & SYNCHRONISATION (v3.2 / PAMG v1.8)
+   COMPTES & SYNCHRONISATION (v3.2 / PAMG v1.8, corrigé en v3.3 / PAMG v1.9)
+   v3.3 : - on reste connecté : le compte est mémorisé sur l’appareil, l’app
+            s’ouvre connectée (même avant la réponse du serveur, même hors ligne)
+          - photo de profil séparée du logo, synchronisée sur tous les appareils
+          - 1re synchronisation d’un appareil : les réglages du compte gagnent
    - Un compte (e-mail + mot de passe) pour retrouver ses données sur
      l’ordinateur et le téléphone. Sans compte, l’app marche comme avant.
    - Chaque app a SES comptes : l’identifiant envoyé au serveur est
@@ -3381,6 +3415,9 @@ const MED_LIB = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/
 const SYNC_META_KEY = STORE_KEY + '_sync';
 // réglages propres à chaque appareil : jamais envoyés
 const DEVICE_ONLY = ['notif', 'lastNotified', 'fontSize'];
+const ACCT_KEY = STORE_KEY + '_compte';   // compte mémorisé sur cet appareil (id, e-mail, prénom)
+const PROFILE_ID = '__profil';            // photo de profil : rangée avec les photos, donc synchronisée
+ICONS.camera = ICONS.camera || '<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>';
 ICONS.user = '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>';
 ICONS.cloud = '<path d="M17.5 19H7a5 5 0 1 1 1-9.9A6 6 0 0 1 19.4 11 4 4 0 0 1 17.5 19z"/>';
 ICONS.lock = '<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>';
@@ -3388,6 +3425,15 @@ ICONS.lock = '<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7
 const Account = {
   sb: null, user: null, status: 'off', // off | idle | syncing | offline | error
   lastSync: 0, busy: false, again: false, timer: null, recovery: false,
+  known: null, ready: false, lost: false, leaving: false, // known = compte mémorisé ; lost = session vraiment perdue
+  keep: true, // case « Me connecter automatiquement » (cochée par défaut)
+  remember(u) { if (!u) return; const k = {keep: this.known ? this.known.keep !== false : this.keep, id: u.id, email: (u.user_metadata && u.user_metadata.email) || String(u.email || '').replace('+' + MED_CLOUD.app + '@', '@'), name: (u.user_metadata && u.user_metadata.name) || ''}; this.known = k; this.lost = false; try { localStorage.setItem(ACCT_KEY, JSON.stringify(k)); if (k.keep) localStorage.setItem('med_lastmail_' + MED_CLOUD.app, k.email); else localStorage.removeItem('med_lastmail_' + MED_CLOUD.app); } catch (e) {} },
+  lastEmail() { try { return localStorage.getItem('med_lastmail_' + MED_CLOUD.app) || ''; } catch (e) { return ''; } },
+  forget() { this.known = null; try { localStorage.removeItem(ACCT_KEY); } catch (e) {} },
+  loadKnown() { try { this.known = JSON.parse(localStorage.getItem(ACCT_KEY) || 'null'); } catch (e) { this.known = null; } return this.known; },
+  signedIn() { return !!(this.user || (this.known && !this.lost)); }, // pour l’affichage : connecté (ou en train de se reconnecter)
+  displayName() { const u = this.user; return (u && u.user_metadata && u.user_metadata.name) || (this.known && this.known.name) || S.settings.name || ''; },
+  displayEmail() { return this.user ? this.realEmail() : (this.known && this.known.email) || ''; },
   configured() { return !!(window.MED_CLOUD && MED_CLOUD.url && MED_CLOUD.key && MED_CLOUD.app); },
   authEmail(e) { // même e-mail, compte distinct pour chaque app
     e = String(e || '').trim().toLowerCase(); const at = e.lastIndexOf('@');
@@ -3407,37 +3453,65 @@ const Account = {
   },
   async init() {
     if (!this.configured()) return;
-    try { await this.loadLib(); } catch (e) { this.status = 'offline'; this.refresh(); setTimeout(() => this.init(), 30000); return; }
+    try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {}); } catch (e) {} // demande au navigateur de ne pas effacer les données
+    let live = false; try { live = sessionStorage.getItem('med_live_' + MED_CLOUD.app) === '1'; } catch (e) {}
+    const endSession = !!(this.known && this.known.keep === false && !live); // « Me connecter automatiquement » pas coché : l’app a été fermée, on se déconnecte
+    if (endSession) { this.forget(); }
+    if (this.known && !this.user && this.status === 'off') { this.status = 'connecting'; this.refresh(true); }
+    try { await this.loadLib(); } catch (e) { this.status = 'offline'; this.refresh(true); setTimeout(() => this.init(), 30000); return; }
     if (this.sb) return;
-    this.sb = window.supabase.createClient(MED_CLOUD.url, MED_CLOUD.key, {auth: {persistSession: true, autoRefreshToken: true, storageKey: 'med_auth_' + MED_CLOUD.app}});
+    this.sb = window.supabase.createClient(MED_CLOUD.url, MED_CLOUD.key, {auth: {persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storageKey: 'med_auth_' + MED_CLOUD.app}});
     this.sb.auth.onAuthStateChange((ev, session) => {
-      this.user = session ? session.user : null;
+      if (session) { this.user = session.user; this.remember(session.user); }
+      else if (ev === 'SIGNED_OUT' && !this.leaving) { this.user = null; if (this.known) this.lost = true; } // session refusée par le serveur : on redemande le mot de passe
       if (ev === 'PASSWORD_RECOVERY') { this.recovery = true; setTimeout(() => go('account'), 50); }
-      this.refresh();
+      this.refresh(true);
     });
-    const r = await this.sb.auth.getSession();
-    this.user = r.data && r.data.session ? r.data.session.user : null;
+    if (endSession) { this.leaving = true; try { await this.sb.auth.signOut({scope: 'local'}); } catch (e) {} this.leaving = false; try { localStorage.removeItem('med_auth_' + MED_CLOUD.app); localStorage.removeItem(SYNC_META_KEY); } catch (e) {} }
+    let r = null;
+    try { r = await this.sb.auth.getSession(); } catch (e) { r = null; }
+    let sess = r && r.data && r.data.session;
+    if (!sess && this.known) { // pas de session lisible : un essai de renouvellement avant de redemander le mot de passe
+      try { const x = await this.sb.auth.refreshSession(); sess = x && x.data && x.data.session; } catch (e) { /* hors ligne */ }
+    }
+    this.user = sess ? sess.user : null;
+    if (this.user) this.remember(this.user);
+    else if (this.known) this.lost = true;
+    this.ready = true;
     this.status = this.user ? 'idle' : 'off';
-    this.refresh();
+    this.refresh(true);
     if (this.user) this.sync();
     window.addEventListener('online', () => this.sync());
     document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') this.sync(); });
     setInterval(() => { if (document.visibilityState === 'visible') this.sync(); }, 120000);
   },
-  refresh() { // met à jour les petits indicateurs sans tout redessiner
+  refresh(full) { // met à jour les petits indicateurs ; full = l’état de connexion a pu changer
     try { renderNav(); } catch (e) { /* pas encore prêt */ }
     const el = document.getElementById('acc-status'); if (el) el.innerHTML = this.statusHTML();
-    if (UI.view === 'account' && !document.querySelector('#view input:focus')) render();
+    const typing = document.querySelector('#view input:focus, #view textarea:focus, .modal.is-open');
+    if (!typing && (UI.view === 'account' || (full && ['home', 'settings'].includes(UI.view)))) { try { render(); } catch (e) {} }
   },
   statusText() {
     if (!this.configured()) return tr('Bientôt disponible', 'Coming soon');
+    if (!this.user && this.known && !this.lost) return this.status === 'offline' ? tr('Hors ligne · synchronisation au retour de la connexion', 'Offline · will sync when back online') : tr('Connexion à ton compte…', 'Connecting to your account…');
+    if (!this.user && this.lost) return tr('Reconnecte-toi pour reprendre la synchronisation', 'Sign in again to resume syncing');
     if (!this.user) return tr('Non connecté · données seulement sur cet appareil', 'Not signed in · data only on this device');
     if (this.status === 'syncing') return tr('Synchronisation…', 'Syncing…');
     if (this.status === 'offline') return tr('Hors ligne · synchronisation au retour de la connexion', 'Offline · will sync when back online');
     if (this.status === 'error') return tr('Synchronisation en attente (nouvel essai bientôt)', 'Sync pending (retrying soon)');
     return this.lastSync ? tr('Synchronisé à ', 'Synced at ') + new Date(this.lastSync).toLocaleTimeString(locale(), {hour: '2-digit', minute: '2-digit'}) : tr('Connecté', 'Signed in');
   },
-  statusHTML() { const ok = this.user && this.status === 'idle'; return `<span class="acc-dot ${ok ? 'ok' : this.user ? 'wait' : ''}"></span>${esc(this.statusText())}`; },
+  statusHTML() { const ok = this.user && this.status === 'idle'; return `<span class="acc-dot ${ok ? 'ok' : this.signedIn() ? 'wait' : ''}"></span>${esc(this.statusText())}`; },
+  /* photo de profil : la photo, sinon les initiales sur un rond aux couleurs de l’app */
+  photo() { return Photos.urls[PROFILE_ID] || ''; },
+  initials() { const n = this.displayName() || (this.displayEmail() || '').split('@')[0]; const w = String(n).trim().split(/[\s._-]+/).filter(Boolean); return w.length ? (w[0][0] + (w.length > 1 ? w[w.length - 1][0] : '')).toUpperCase() : ''; },
+  avatarHTML(cls = '') { const p = this.photo(), ini = this.initials(); return `<span class="acc-avatar ${cls} ${p ? 'has-photo' : ''}" aria-hidden="true">${p ? `<img src="${esc(p)}" alt="">` : ini ? `<span class="acc-ini">${esc(ini)}</span>` : ic('user')}</span>`; },
+  async setPhoto(file) {
+    const data = await resizeImage(file, 480, .85);
+    const kept = await Photos.set(PROFILE_ID, data);
+    try { render(); } catch (e) {}
+    toast(kept ? tr('Photo de profil enregistrée', 'Profile photo saved') : tr('Photo gardée pour cette session (stockage indisponible)', 'Photo kept for this session (storage unavailable)'));
+  },
 
   changed() { if (!this.user) return; clearTimeout(this.timer); this.timer = setTimeout(() => this.sync(), 2500); },
   async rpc(fn, args) { const r = await this.sb.rpc(fn, args); if (r.error) throw r.error; return r.data; },
@@ -3453,6 +3527,10 @@ const Account = {
     if (r.error) throw r.error; this.user = r.data.user; await this.afterLogin();
   },
   async afterLogin() {
+    if (this.known && this.known.id !== this.user.id) this.known = null;
+    if (this.known) this.known.keep = this.keep;
+    this.remember(this.user); this.ready = true;
+    try { sessionStorage.setItem('med_live_' + MED_CLOUD.app, '1'); } catch (e) {}
     const m = this.meta();
     if (m.uid && m.uid !== this.user.id) {
       // les données de cet appareil viennent d’un autre compte : on ne mélange pas
@@ -3461,7 +3539,9 @@ const Account = {
     this.status = 'idle'; await this.sync(true);
   },
   async signOut(wipe) {
+    this.leaving = true;
     try { await this.sb.auth.signOut(); } catch (e) { /* hors ligne : la session locale est quand même effacée */ }
+    this.leaving = false; this.forget(); this.lost = false;
     this.user = null; this.status = 'off'; this.lastSync = 0;
     try { localStorage.removeItem(SYNC_META_KEY); } catch (e) {}
     if (wipe) { try { localStorage.removeItem(STORE_KEY); } catch (e) {} await Photos.clear(); S = loadState(); }
@@ -3505,8 +3585,9 @@ const Account = {
         let merged;
         if (m.replace && rData) merged = rData;
         else if (!rData) merged = local;
-        else if (rRev === m.rev) merged = local;
-        else merged = merge3(m.base || {}, local, rData);
+        else if (rRev === m.rev && m.base) merged = local;
+        else if (!m.base) { MERGE.preferRemote = true; try { merged = merge3({}, local, rData); } finally { MERGE.preferRemote = false; } } // 1re fois sur cet appareil : le compte gagne (prénom, réglages…)
+        else merged = merge3(m.base, local, rData);
         if (!same(merged, local)) this.applyMerged(merged);
         let rev = rRev;
         if (!rData || !same(merged, rData)) {
@@ -3518,10 +3599,17 @@ const Account = {
       }
       await this.syncPhotos();
       this.status = 'idle'; this.lastSync = Date.now();
+      if (S.settings.logo && !S.settings.logoMoved) setTimeout(() => moveLogoToProfile(), 0);
     } catch (e) {
       console.warn('Synchronisation', e);
       this.status = /Failed to fetch|NetworkError|network|Load failed/i.test(String(e && e.message)) ? 'offline' : 'error';
-      if (/JWT|token|not authenticated|MED_AUTH/i.test(String(e && e.message))) { this.user = null; this.status = 'off'; }
+      if (/JWT|token|not authenticated|MED_AUTH/i.test(String(e && e.message))) {
+        // jeton expiré (appli restée fermée longtemps) : on le renouvelle au lieu de déconnecter
+        let ok = false;
+        try { const x = await this.sb.auth.refreshSession(); ok = !!(x && x.data && x.data.session); if (ok) { this.user = x.data.session.user; this.remember(this.user); } } catch (e2) { /* hors ligne */ }
+        if (ok) { this.busy = false; this.status = 'idle'; setTimeout(() => this.sync(), 1500); return; }
+        if (navigator.onLine !== false) { this.user = null; this.status = 'off'; this.lost = true; }
+      }
       setTimeout(() => this.sync(), 60000);
     }
     this.busy = false; this.refresh();
@@ -3561,7 +3649,7 @@ const Account = {
       if (row && row.data) { await Photos.set(id, row.data); await this.stampPhoto(id, remote[id]); known[id] = remote[id]; changed = true; }
     }
     m.photos = known; this.setMeta(m);
-    if (changed && UI.view === 'teach') render();
+    if (changed) { try { if (['teach', 'account', 'settings', 'home'].includes(UI.view) && !document.querySelector('#view input:focus, #view textarea:focus, .modal.is-open')) render(); else renderNav(); } catch (e) {} }
   },
   stampPhoto(id, at) { // garde la date du serveur pour ne pas renvoyer la photo
     return new Promise(res => { if (!Photos.db) return res(); const r = Photos.tx('readwrite').put({id, data: Photos.urls[id], at}); r.onsuccess = r.onerror = () => res(); });
@@ -3572,7 +3660,8 @@ const Account = {
 function same(a, b) { return JSON.stringify(a) === JSON.stringify(b); }
 const isObj = x => x && typeof x === 'object' && !Array.isArray(x);
 const stamp = x => isObj(x) ? (+x.updatedAt || +x.createdAt || 0) : 0;
-function newer(l, r) { return stamp(r) > stamp(l) ? r : l; }
+const MERGE = {preferRemote: false};
+function newer(l, r) { const a = stamp(l), b = stamp(r); return b > a || (b === a && MERGE.preferRemote) ? r : l; }
 function keyOf(arrName) { return arrName === 'quizResults' ? (x => JSON.stringify(x)) : (x => isObj(x) && x.id != null ? 'id:' + x.id : JSON.stringify(x)); }
 function mergeList(b, l, r, kf) {
   const B = new Map((b || []).map(x => [kf(x), x])), L = new Map(l.map(x => [kf(x), x])), R = new Map(r.map(x => [kf(x), x]));
@@ -3673,33 +3762,40 @@ function privacyText() {
 VIEWS.account = () => {
   const A = UI.acc, u = Account.user;
   const head = `<div class="view-head"><div><div class="eyebrow">${tr('Ordinateur + téléphone', 'Computer + phone')}</div><h1>${tr('Mon compte', 'My account')}</h1></div></div>`;
+  const hasP = !!Account.photo();
+  const photoBox = `<div class="acc-me">${Account.avatarHTML('xl')}<div class="acc-me-txt"><div class="acc-me-name">${esc(Account.displayName() || tr('Ma photo de profil', 'My profile photo'))}</div>${Account.displayEmail() ? `<div class="sec">${esc(Account.displayEmail())}</div>` : ''}
+    <div class="row acc-photo-btns"><label class="btn btn-sm btn-secondary">${ic('camera')} ${hasP ? tr('Changer la photo', 'Change the photo') : tr('Ajouter une photo de profil', 'Add a profile photo')}<input type="file" accept="image/*" class="hidden" id="acc-photo-in"></label>${hasP ? `<button class="btn btn-sm btn-ghost" data-action="acc-photo-del">${tr('Retirer', 'Remove')}</button>` : ''}</div></div></div>`;
   const privacy = `<button class="link-btn" data-action="acc-privacy">${ic('lock')} ${tr('Confidentialité et données personnelles', 'Privacy and personal data')}</button>`;
   if (!Account.configured()) return head + `<div class="panel acc-panel"><h2>${ic('cloud')} ${tr('Bientôt disponible', 'Coming soon')}</h2><p class="sec">${tr('Les comptes arrivent très bientôt. En attendant, tes données restent sur cet appareil : pense à « Exporter » une sauvegarde dans Paramètres.', 'Accounts are coming very soon. Meanwhile your data stays on this device: remember to “Export” a backup in Settings.')}</p></div>`;
   if (Account.recovery && u) return head + `<div class="panel acc-panel"><h2>${tr('Nouveau mot de passe', 'New password')}</h2><div class="field"><input class="input" type="password" id="acc-newpw" autocomplete="new-password" placeholder="${tr('Au moins 8 caractères', 'At least 8 characters')}"></div><p class="acc-err" id="acc-err"></p><button class="btn btn-primary" data-action="acc-setpw">${tr('Enregistrer', 'Save')}</button></div>`;
-  if (u) {
-    const nm = (u.user_metadata && u.user_metadata.name) || '';
-    return head + `<div class="grid-2"><div class="panel acc-panel"><h2>${ic('user')} ${esc(nm || tr('Connecté', 'Signed in'))}</h2><p class="sec">${esc(Account.realEmail())}</p>
+  if (u || (Account.known && !Account.lost)) {
+    return head + `<div class="grid-2"><div class="panel acc-panel">${photoBox}
       <p class="acc-status" id="acc-status">${Account.statusHTML()}</p>
       <p class="help">${tr('Tes méditations, notes, surlignages, favoris, défis, enseignements et photos se synchronisent automatiquement entre tous les appareils où tu es connecté. Tout reste aussi sur cet appareil et marche sans internet.', 'Your meditations, notes, highlights, bookmarks, challenges, teachings and photos sync automatically across every device where you are signed in. Everything also stays on this device and works without internet.')}</p>
       <div class="row"><button class="btn btn-primary" data-action="acc-sync">${ic('cloud')} ${tr('Synchroniser maintenant', 'Sync now')}</button><button class="btn btn-secondary" data-action="acc-logout">${tr('Se déconnecter', 'Sign out')}</button></div></div>
       <div class="panel acc-panel"><h2>${ic('lock')} ${tr('Vie privée', 'Privacy')}</h2><p class="sec">${tr('Ton contenu est privé : seul ton compte peut le lire.', 'Your content is private: only your account can read it.')}</p>${privacy}
       <div class="nav-sep" style="margin:16px 0"></div><button class="btn btn-danger" data-action="acc-delete">${ic('trash')} ${tr('Supprimer mon compte', 'Delete my account')}</button><p class="help">${tr('Efface ton compte et toutes tes données sur le serveur. Les données restent sur cet appareil.', 'Erases your account and all your data on the server. The data stays on this device.')}</p></div></div>`;
   }
+  if (Account.lost && Account.known && !A.touched) A.mode = 'login';
   const su = A.mode === 'signup';
-  return head + `<div class="grid-2"><div class="panel acc-panel"><div class="seg acc-tabs"><button class="${su ? 'is-on' : ''}" data-action="acc-mode" data-mode="signup">${tr('Créer mon compte', 'Create my account')}</button><button class="${su ? '' : 'is-on'}" data-action="acc-mode" data-mode="login">${tr('J’ai déjà un compte', 'I already have an account')}</button></div>
+  const again = Account.lost && Account.known ? `<p class="sec acc-again">${tr('Ta connexion a expiré sur cet appareil : entre ton mot de passe une fois, tes données restent là.', 'Your sign-in expired on this device: enter your password once, your data is still here.')}</p>` : '';
+  return head + `<div class="grid-2"><div class="panel acc-panel">${again}<div class="seg acc-tabs"><button class="${su ? '' : 'is-on'}" data-action="acc-mode" data-mode="login">${tr('Me connecter', 'Sign in')}</button><button class="${su ? 'is-on' : ''}" data-action="acc-mode" data-mode="signup">${tr('M’inscrire', 'Sign up')}</button></div>
     <form id="acc-form" autocomplete="on">
       ${su ? `<div class="field"><label class="label" for="acc-name">${tr('Prénom', 'First name')}</label><input class="input" id="acc-name" autocomplete="given-name" value="${esc(S.settings.name || '')}"></div>` : ''}
-      <div class="field"><label class="label" for="acc-email">E-mail</label><input class="input" type="email" id="acc-email" autocomplete="email" inputmode="email" required></div>
-      <div class="field"><label class="label" for="acc-pw">${tr('Mot de passe', 'Password')}</label><input class="input" type="password" id="acc-pw" autocomplete="${su ? 'new-password' : 'current-password'}" minlength="8" required>${su ? `<div class="help">${tr('Au moins 8 caractères.', 'At least 8 characters.')}</div>` : ''}</div>
+      <div class="field"><label class="label" for="acc-email">E-mail</label><input class="input" type="email" id="acc-email" name="email" autocomplete="username email" inputmode="email" required value="${esc(su ? '' : (Account.known && Account.known.email) || Account.lastEmail() || '')}"></div>
+      <div class="field"><label class="label" for="acc-pw">${tr('Mot de passe', 'Password')}</label><input class="input" type="password" id="acc-pw" name="password" autocomplete="${su ? 'new-password' : 'current-password'}" minlength="8" required>${su ? `<div class="help">${tr('Au moins 8 caractères.', 'At least 8 characters.')}</div>` : ''}</div>
       ${su ? `<label class="acc-check"><input type="checkbox" id="acc-ok" required> <span>${tr('J’ai lu', 'I have read')} <a href="#" data-action="acc-privacy">${tr('la page confidentialité', 'the privacy page')}</a> ${tr('et j’accepte que mes données soient enregistrées pour les synchroniser.', 'and I agree that my data is stored to sync it.')}</span></label>` : ''}
+      <label class="acc-check acc-keep"><input type="checkbox" id="acc-keep" ${Account.keep ? 'checked' : ''}> <span><b>${tr('Me connecter automatiquement', 'Sign me in automatically')}</b><br>${tr('La prochaine fois, l’app s’ouvre directement sur ton compte. Ton téléphone ou ton navigateur te proposera aussi d’enregistrer ton e-mail et ton mot de passe : accepte, et ils seront déjà remplis.', 'Next time, the app opens straight into your account. Your phone or browser will also offer to save your e-mail and password: accept, and they will be filled in for you.')}</span></label>
       <p class="acc-err" id="acc-err">${esc(A.err)}</p>
       <button class="btn btn-primary" type="submit" ${A.busy ? 'disabled' : ''}>${su ? tr('Créer mon compte', 'Create my account') : tr('Me connecter', 'Sign in')}</button>
       ${su ? '' : `<button type="button" class="link-btn" data-action="acc-forgot">${tr('Mot de passe oublié ?', 'Forgot password?')}</button>`}
     </form></div>
     <div class="panel acc-panel"><h2>${ic('cloud')} ${tr('Pourquoi un compte ?', 'Why an account?')}</h2><p class="sec">${tr('Avec un compte, tu retrouves sur ton téléphone ce que tu as fait sur ton ordinateur, et inversement. Ce que tu as déjà sur cet appareil est gardé et envoyé dans ton compte.', 'With an account, you find on your phone what you did on your computer, and the other way round. What you already have on this device is kept and sent to your account.')}</p>
-    <p class="help">${tr('Ce compte sert uniquement pour cette application.', 'This account is only for this app.')}</p>${privacy}</div></div>`;
+    <p class="help">${tr('Ce compte sert uniquement pour cette application.', 'This account is only for this app.')}</p>${privacy}</div>
+    <div class="panel acc-panel">${photoBox}<p class="help">${tr('Ta photo de profil s’affiche en bas de la barre de gauche (en haut à droite sur téléphone), jamais à la place du logo. Avec un compte, elle apparaît sur tous tes appareils.', 'Your profile photo shows at the bottom of the left bar (top right on phone), never in place of the logo. With an account, it appears on all your devices.')}</p></div></div>`;
 };
 AFTER.account = () => {
+  const pin = $('#acc-photo-in'); if (pin) pin.addEventListener('change', async () => { const f = pin.files && pin.files[0]; if (!f) return; try { await Account.setPhoto(f); } catch (e) { toast(tr('Image illisible', 'Unreadable image')); } });
   const f = $('#acc-form'); if (!f) return;
   f.addEventListener('submit', async e => {
     e.preventDefault();
@@ -3708,15 +3804,20 @@ AFTER.account = () => {
     if (pw.length < 8) { err.textContent = tr('Le mot de passe doit avoir au moins 8 caractères.', 'The password must have at least 8 characters.'); return; }
     if (A.mode === 'signup' && !$('#acc-ok').checked) { err.textContent = tr('Coche la case pour accepter la page confidentialité.', 'Tick the box to accept the privacy page.'); return; }
     const btn = f.querySelector('button[type=submit]'); btn.disabled = true; err.textContent = tr('Un instant…', 'One moment…');
+    const kp = $('#acc-keep'); Account.keep = !kp || kp.checked;
     try {
       if (A.mode === 'signup') { const nm = ($('#acc-name').value || '').trim(); if (nm && !S.settings.name) { S.settings.name = nm; save(); } await Account.signUp(em, pw, nm); }
       else await Account.signIn(em, pw);
+      // propose au navigateur / téléphone d’enregistrer l’e-mail et le mot de passe (si « Me connecter automatiquement »)
+      if (Account.keep && window.PasswordCredential && navigator.credentials) { try { await navigator.credentials.store(new PasswordCredential({id: em, password: pw, name: em})); } catch (e) {} }
       A.err = ''; render(); toast(tr('Connecté : tes données se synchronisent', 'Signed in: your data is syncing'));
     } catch (x) { err.textContent = Account.errText(x); btn.disabled = false; }
   });
 };
 Object.assign(ACTIONS, {
-  'acc-mode': el => { UI.acc.mode = el.dataset.mode; UI.acc.err = ''; render(); },
+  'acc-open': el => { UI.acc.mode = el.dataset.mode; UI.acc.err = ''; UI.acc.touched = true; go('account'); },
+  'acc-mode': el => { UI.acc.mode = el.dataset.mode; UI.acc.err = ''; UI.acc.touched = true; render(); },
+  'acc-photo-del': () => confirmBox(tr('Retirer ta photo de profil (sur tous tes appareils) ?', 'Remove your profile photo (on all your devices)?'), async () => { await Photos.del(PROFILE_ID); render(); toast(tr('Photo retirée', 'Photo removed')); }, tr('Retirer', 'Remove')),
   'acc-privacy': (el, ev) => { if (ev) ev.preventDefault(); openModal({title: tr('Confidentialité', 'Privacy'), body: `<div class="prose acc-privacy">${privacyText()}</div>`, wide: true}); },
   'acc-sync': () => Account.sync(),
   'acc-logout': () => openModal({title: tr('Se déconnecter', 'Sign out'), body: `<p class="sec" style="line-height:1.6">${tr('Tes données restent dans ton compte. Veux-tu aussi les effacer de cet appareil (par exemple sur un appareil partagé) ?', 'Your data stays in your account. Do you also want to erase it from this device (for example on a shared device)?')}</p>`,
@@ -3742,11 +3843,37 @@ Object.assign(ACTIONS, {
 /* Accueil : invitation à créer un compte (une seule fois, peut être fermée) */
 const _homeView = VIEWS.home;
 VIEWS.home = () => {
-  const b = Account.configured() && !Account.user && !S.settings.accBannerOff
-    ? `<div class="banner acc-banner">${ic('cloud')}<span><b>${tr('Retrouve tes méditations sur tous tes appareils', 'Find your meditations on all your devices')}</b><br><span class="muted" style="font-size:12.5px">${tr('Crée ton compte gratuit : ordinateur et téléphone restent synchronisés.', 'Create your free account: computer and phone stay in sync.')}</span></span><span class="spacer"></span><button class="btn btn-sm btn-primary" data-action="nav" data-view="account">${tr('Créer mon compte', 'Create my account')}</button><button class="btn btn-ghost btn-icon" data-action="acc-banner-off" aria-label="${tr('Fermer', 'Close')}">${ic('x')}</button></div>` : '';
+  const b = Account.configured() && !Account.signedIn() && !S.settings.accBannerOff
+    ? `<div class="banner acc-banner">${ic('cloud')}<span><b>${tr('Retrouve tes méditations sur tous tes appareils', 'Find your meditations on all your devices')}</b><br><span class="muted" style="font-size:12.5px">${tr('Tu as déjà un compte ? Connecte-toi. Sinon, inscris-toi gratuitement : ordinateur et téléphone restent synchronisés.', 'Already have an account? Sign in. Otherwise sign up for free: computer and phone stay in sync.')}</span></span><span class="spacer"></span><span class="acc-banner-btns"><button class="btn btn-sm btn-primary" data-action="acc-open" data-mode="login">${tr('Me connecter', 'Sign in')}</button><button class="btn btn-sm btn-secondary" data-action="acc-open" data-mode="signup">${tr('M’inscrire', 'Sign up')}</button></span><button class="btn btn-ghost btn-icon" data-action="acc-banner-off" aria-label="${tr('Fermer', 'Close')}">${ic('x')}</button></div>` : '';
   return b + _homeView();
 };
-document.addEventListener('DOMContentLoaded', () => { setTimeout(() => { Account.init(); Migrate.check(); }, 0); });
+/* Photo de profil : en bas de la barre de gauche (ordinateur) et en haut à droite (téléphone), jamais à la place du logo */
+const _renderNav = renderNav;
+renderNav = function () {
+  _renderNav();
+  if (!Account.configured() && !Account.photo()) return;
+  const sf = document.querySelector('.sidebar-footer');
+  let chip = document.getElementById('acc-chip');
+  if (!chip && sf) { chip = document.createElement('button'); chip.id = 'acc-chip'; chip.type = 'button'; chip.className = 'acc-chip'; chip.dataset.action = 'nav'; chip.dataset.view = 'account'; sf.parentNode.insertBefore(chip, sf); }
+  const on = Account.signedIn(), synced = !!(Account.user && Account.status === 'idle');
+  if (chip) { chip.classList.toggle('is-active', UI.view === 'account'); chip.title = tr('Mon compte', 'My account');
+    chip.innerHTML = `${Account.avatarHTML()}<span class="acc-chip-txt"><b>${esc(Account.displayName() || (on ? tr('Mon compte', 'My account') : tr('Se connecter / s’inscrire', 'Sign in / sign up')))}</b><small><span class="acc-dot ${synced ? 'ok' : on ? 'wait' : ''}"></span>${on ? (synced ? tr('Synchronisé', 'Synced') : Account.status === 'offline' ? tr('Hors ligne', 'Offline') : tr('Connexion…', 'Connecting…')) : tr('Non connecté', 'Not signed in')}</small></span>`; }
+  let mb = document.getElementById('m-acc');
+  if (!mb) { mb = document.createElement('button'); mb.id = 'm-acc'; mb.type = 'button'; mb.className = 'm-acc'; mb.dataset.action = 'nav'; mb.dataset.view = 'account'; document.body.appendChild(mb); }
+  mb.setAttribute('aria-label', tr('Mon compte', 'My account')); mb.innerHTML = Account.avatarHTML('sm');
+};
+/* v3.3 : une photo mise à la place du logo devient la photo de profil (une seule fois) */
+async function moveLogoToProfile() {
+  const lg = S.settings.logo;
+  if (!lg || S.settings.logoMoved || /^data:image\/svg/.test(lg)) return;
+  if (!Account.photo()) await Photos.set(PROFILE_ID, lg);
+  S.settings.logo = null; S.settings.logoMoved = true; save();
+  try { render(); } catch (e) {}
+  toast(tr('Ta photo est maintenant ta photo de profil (Mon compte). Le logo de l’app est revenu.', 'Your photo is now your profile photo (My account). The app logo is back.'));
+}
+Account.loadKnown();
+UI.acc.mode = 'login'; // on propose d’abord « Me connecter » ; « M’inscrire » est juste à côté
+document.addEventListener('DOMContentLoaded', () => { setTimeout(() => { Account.init(); Migrate.check(); Photos.load().then(() => { try { renderNav(); } catch (e) {} return moveLogoToProfile(); }); }, 0); });
 
 window.Account = Account;
 </script>
