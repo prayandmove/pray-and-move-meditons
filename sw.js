@@ -1,5 +1,5 @@
 /* Méditons Ensemble · Pray and Move Generation — service worker (fonctionnement hors connexion) */
-const VERSION = '1.7';
+const VERSION = '1.8';
 const CACHE = 'pamg-med-' + VERSION;
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/icon-maskable-512.png', './icons/apple-touch-icon.png'];
 
@@ -14,7 +14,7 @@ self.addEventListener('fetch', e => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
   // YouTube (vidéos intégrées) : toujours en direct
-  if (/youtube|googlevideo/.test(url.hostname)) return;
+  if (/youtube|googlevideo|supabase/.test(url.hostname)) return;
   if (req.mode === 'navigate') {
     // l’app s’ouvre tout de suite depuis le cache, la mise à jour arrive en arrière-plan
     e.respondWith(caches.match('./index.html').then(cached => {

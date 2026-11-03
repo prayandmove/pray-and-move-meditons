@@ -481,6 +481,26 @@ html{background:#0A1230;}
 @media (max-width:860px){.m-app-ver{display:block;position:absolute;top:calc(21px + env(safe-area-inset-top));left:16px;margin:0;z-index:45;padding:4px 9px;border:1px solid rgba(232,181,44,.4);border-radius:999px;background:rgba(10,18,48,.85);}}
 @media print{.app-ver{display:none!important}}
 
+
+/* ---- Comptes & synchronisation (v3.2 / PAMG v1.8) ---- */
+.acc-panel h2{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.acc-panel .sec{font-size:13.5px;line-height:1.6;margin-bottom:14px}
+.acc-tabs{display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap}
+.acc-tabs button{flex:1;min-width:140px;padding:10px 12px;border-radius:999px;border:1px solid var(--border-strong);background:transparent;color:var(--text-secondary);font:inherit;font-size:13.5px;font-weight:600;cursor:pointer}
+.acc-tabs button.is-on{background:var(--gold);border-color:var(--gold);color:#0A1230}
+.acc-err{min-height:1.2em;color:var(--gold-light);font-size:13px;margin:6px 0 10px;line-height:1.5}
+.acc-check{display:flex;gap:10px;align-items:flex-start;font-size:13px;line-height:1.5;color:var(--text-secondary);margin:4px 0 6px}
+.acc-check input{margin-top:3px;width:18px;height:18px;accent-color:#E8B52C;flex:none}
+.acc-check a{color:var(--gold-light)}
+.acc-status{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-secondary);margin:-4px 0 12px}
+.acc-dot{width:9px;height:9px;border-radius:50%;background:var(--text-muted);flex:none}
+.acc-dot.ok{background:#3ecf8e}.acc-dot.wait{background:var(--gold)}
+.link-btn{display:inline-flex;align-items:center;gap:6px;background:none;border:0;padding:6px 0;color:var(--gold-light);font:inherit;font-size:13px;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.link-btn .i{width:15px;height:15px}
+.acc-banner .btn-icon{margin-left:-4px}
+.acc-privacy p{margin:0 0 12px;line-height:1.65;font-size:14px}
+.acc-privacy a{color:var(--gold-light)}
+@media (max-width:640px){.acc-banner{flex-wrap:wrap}.acc-banner .spacer{display:none}}
 </style>
 </head>
 <body>
@@ -928,7 +948,7 @@ const FEEDBACK_URL = '';
 const STORE_KEY = 'pamg_meditons_v1';   // clé propre à l’édition de l’Église
 const OLD_KEY = '';                      // pas de reprise des données de l’app de base
 const BIBLE_DB = 'pamg_bibles';
-const APP_VERSION = '1.7';
+const APP_VERSION = '1.8';
 const PHOTO_DB = 'pamg_photos';       // photos des rubriques d’enseignements (IndexedDB)
 
 /* ---------- Livres de la Bible : [code, nom, testament, abréviations] ---------- */
@@ -1712,8 +1732,8 @@ const Photos = {
   },
   tx(mode) { return this.db.transaction('photos', mode).objectStore('photos'); },
   load() { return this.open().then(() => new Promise(res => { if (!this.db) return res(0); const r = this.tx('readonly').getAll(); r.onsuccess = () => { (r.result || []).forEach(p => { if (p && p.id && p.data) this.urls[p.id] = p.data; }); res((r.result || []).length); }; r.onerror = () => res(0); })); },
-  set(id, data) { this.urls[id] = data; return new Promise(res => { if (!this.db) return res(false); const r = this.tx('readwrite').put({id, data, at: Date.now()}); r.onsuccess = () => res(true); r.onerror = () => res(false); }); },
-  del(id) { delete this.urls[id]; return new Promise(res => { if (!this.db) return res(); const r = this.tx('readwrite').delete(id); r.onsuccess = r.onerror = () => res(); }); },
+  set(id, data) { this.urls[id] = data; return new Promise(res => { if (!this.db) return res(false); const r = this.tx('readwrite').put({id, data, at: Date.now()}); r.onsuccess = () => { res(true); if (window.Account) Account.changed(); }; r.onerror = () => res(false); }); },
+  del(id) { delete this.urls[id]; return new Promise(res => { if (!this.db) return res(); const r = this.tx('readwrite').delete(id); r.onsuccess = r.onerror = () => { res(); if (window.Account) Account.changed(); }; }); },
   clear() { this.urls = {}; return new Promise(res => { if (!this.db) return res(); const r = this.tx('readwrite').clear(); r.onsuccess = r.onerror = () => res(); }); }
 };
 /* Réduit une photo (max 1280 px) pour qu’elle reste légère sur l’appareil */
@@ -1797,7 +1817,7 @@ function loadState() {
 }
 let S;
 function save() {
-  try { localStorage.setItem(STORE_KEY, JSON.stringify(S)); }
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(S)); if (window.Account) Account.changed(); }
   catch (e) { toast(tr('Impossible d’enregistrer : la mémoire du navigateur est pleine. Exporte une sauvegarde dans Paramètres.', 'Unable to save: the browser’s storage is full. Export a backup in Settings.')); }
 }
 const saveSoon = debounce(save, 400);
@@ -2994,7 +3014,7 @@ VIEWS.settings = () => {
     <div class="panel" style="grid-column:1/-1"><h2 style="margin-bottom:14px">${tr('Notre Église', 'Our Church')}</h2>${visionHTML(true)}</div>
     <div class="panel" style="grid-column:1/-1"><h2 style="margin-bottom:6px">Application</h2><p class="sec" style="font-size:13.5px;margin-bottom:16px;line-height:1.6">${isStandalone() ? tr('Méditons Ensemble est installée sur cet appareil.', 'Méditons Ensemble is installed on this device.') : tr('Installe Méditons Ensemble sur ton téléphone ou ton ordinateur : elle s’ouvre comme une vraie application et fonctionne sans connexion.', 'Install Méditons Ensemble on your phone or computer: it opens like a real app and works offline.')}</p>
       <div class="row">${isStandalone() ? '' : `<button class="btn btn-primary" data-action="install-app">${ic('download')} ${tr('Installer l’application', 'Install the app')}</button>`}<button class="btn btn-secondary" data-action="feedback">${ic('heart')} ${tr('Donner mon avis', 'Give feedback')}</button></div></div>
-    <div class="panel"><h2 style="margin-bottom:6px">${tr('Sauvegarde', 'Backup')}</h2><p class="sec" style="font-size:13.5px;margin-bottom:16px;line-height:1.6">${tr('Tes données restent dans ce navigateur. Exporte régulièrement une sauvegarde pour ne rien perdre, ou pour passer sur un autre appareil.', 'Your data stays in this browser. Export a backup regularly so you lose nothing, or to move to another device.')}</p>
+    <div class="panel"><h2 style="margin-bottom:6px">${tr('Sauvegarde', 'Backup')}</h2><p class="sec" style="font-size:13.5px;margin-bottom:16px;line-height:1.6">${(window.Account && Account.user ? tr('Tes données sont synchronisées avec ton compte. Tu peux aussi exporter une copie dans un fichier.', 'Your data is synced with your account. You can also export a copy to a file.') : tr('Sans compte, tes données restent dans ce navigateur. Crée un compte (« Mon compte ») ou exporte régulièrement une sauvegarde.', 'Without an account, your data stays in this browser. Create an account (“My account”) or export a backup regularly.'))}</p>
       <div class="row"><button class="btn btn-primary" data-action="export-data">${ic('download')} ${tr('Exporter', 'Export')}</button><label class="btn btn-secondary">${ic('upload')} ${tr('Importer', 'Import')}<input type="file" accept=".json,application/json" id="import-data" class="hidden"></label></div>
       <p class="help">${tr('Dernière modification :', 'Last modified:')} ${new Date().toLocaleDateString(locale())}</p></div>
     <div class="panel"><h2 style="margin-bottom:6px">${tr('Zone sensible', 'Danger zone')}</h2><p class="sec" style="font-size:13.5px;margin-bottom:16px">${tr('Efface toutes les méditations, enseignements, défis et réglages de ce navigateur.', 'Erases all meditations, teachings, challenges and settings from this browser.')}</p><button class="btn btn-danger" data-action="reset-all">${ic('trash')} ${tr('Tout réinitialiser', 'Reset everything')}</button>
@@ -3079,7 +3099,7 @@ function checkReminder() {
    ===================================================================== */
 const ACTIONS = {
   'nav': el => { const v = el.dataset.view; if (v === 'teach') UI.teach.detail = null; if (v === 'meditate') UI.passage.mode = UI.passage.mode || 'bible'; closeModal(); go(v); },
-  'more-menu': () => openModal({title: 'Menu', body: `<div class="list">${[['journal', 'journal', tr('Journal de méditation', 'Meditation journal')], ['bilan', 'chart', tr('Bilan', 'Review')], ['settings', 'settings', tr('Paramètres', 'Settings')], ['feedback', 'heart', tr('Donner mon avis', 'Give feedback'), 'feedback']].concat(canOfferInstall() ? [['install', 'download', tr('Installer l’application', 'Install the app'), 'install-app']] : []).map(([v, i, l, a]) => `<div class="list-item" data-action="${a || 'nav'}" data-view="${v}"><div class="li-icon">${ic(i)}</div><div class="li-body"><div class="li-title">${l}</div></div>${ic('chevR')}</div>`).join('')}</div>`}),
+  'more-menu': () => openModal({title: 'Menu', body: `<div class="list">${[['journal', 'journal', tr('Journal de méditation', 'Meditation journal')], ['bilan', 'chart', tr('Bilan', 'Review')], ['account', 'user', tr('Mon compte', 'My account')], ['settings', 'settings', tr('Paramètres', 'Settings')], ['feedback', 'heart', tr('Donner mon avis', 'Give feedback'), 'feedback']].concat(canOfferInstall() ? [['install', 'download', tr('Installer l’application', 'Install the app'), 'install-app']] : []).map(([v, i, l, a]) => `<div class="list-item" data-action="${a || 'nav'}" data-view="${v}"><div class="li-icon">${ic(i)}</div><div class="li-body"><div class="li-title">${l}</div></div>${ic('chevR')}</div>`).join('')}</div>`}),
   'close-modal': () => closeModal(),
   'open-summary': el => go('summary', {summaryId: el.dataset.id}),
   'resume-med': el => { const m = S.meditations.find(x => x.id === el.dataset.id); if (!m) return; const first = QUESTIONS.findIndex(q => !stepFilled(m, q)); go('meditate-edit', {medId: m.id, medStep: m.status === 'done' ? 0 : Math.max(0, first), medTmpSel: new Set()}); },
@@ -3341,6 +3361,394 @@ if ('serviceWorker' in navigator && isOnline()) {
   });
 }
 
+
+</script>
+<script>
+window.MED_CLOUD = {"url": "https://wtzhreshvmuifsoarmqm.supabase.co", "key": "sb_publishable_ibA-ADodfQ_QQu8RmvPK0g_156IE6UX", "app": "pamg", "name": "Méditons Ensemble · Pray and Move Generation", "contact": "cnanmenibondja@gmail.com", "oldOrigin": "https://cnanmenibondja-spec.github.io"};
+'use strict';
+/* =====================================================================
+   COMPTES & SYNCHRONISATION (v3.2 / PAMG v1.8)
+   - Un compte (e-mail + mot de passe) pour retrouver ses données sur
+     l’ordinateur et le téléphone. Sans compte, l’app marche comme avant.
+   - Chaque app a SES comptes : l’identifiant envoyé au serveur est
+     « prenom+<app>@domaine » (MED_CLOUD.app), donc un compte de l’édition
+     Pray and Move n’existe pas dans Méditons Ensemble, et inversement.
+   - Copie locale complète : tout fonctionne hors ligne, la synchronisation
+     se fait dès que la connexion revient (fusion élément par élément).
+   - Réception des données d’une ancienne adresse (« l’app a déménagé »).
+   ===================================================================== */
+const MED_LIB = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js';
+const SYNC_META_KEY = STORE_KEY + '_sync';
+// réglages propres à chaque appareil : jamais envoyés
+const DEVICE_ONLY = ['notif', 'lastNotified', 'fontSize'];
+ICONS.user = '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>';
+ICONS.cloud = '<path d="M17.5 19H7a5 5 0 1 1 1-9.9A6 6 0 0 1 19.4 11 4 4 0 0 1 17.5 19z"/>';
+ICONS.lock = '<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>';
+
+const Account = {
+  sb: null, user: null, status: 'off', // off | idle | syncing | offline | error
+  lastSync: 0, busy: false, again: false, timer: null, recovery: false,
+  configured() { return !!(window.MED_CLOUD && MED_CLOUD.url && MED_CLOUD.key && MED_CLOUD.app); },
+  authEmail(e) { // même e-mail, compte distinct pour chaque app
+    e = String(e || '').trim().toLowerCase(); const at = e.lastIndexOf('@');
+    return at < 1 ? e : `${e.slice(0, at)}+${MED_CLOUD.app}${e.slice(at)}`;
+  },
+  realEmail() { const u = this.user; if (!u) return ''; return (u.user_metadata && u.user_metadata.email) || String(u.email || '').replace('+' + MED_CLOUD.app + '@', '@'); },
+  meta() { try { return JSON.parse(localStorage.getItem(SYNC_META_KEY) || 'null') || {}; } catch (e) { return {}; } },
+  setMeta(m) { try { localStorage.setItem(SYNC_META_KEY, JSON.stringify(m)); } catch (e) { /* plein */ } },
+
+  loadLib() {
+    if (window.supabase && window.supabase.createClient) return Promise.resolve();
+    return new Promise((res, rej) => {
+      const s = document.createElement('script'); s.src = MED_LIB; s.async = true;
+      s.onload = () => res(); s.onerror = () => rej(new Error('offline'));
+      document.head.appendChild(s);
+    });
+  },
+  async init() {
+    if (!this.configured()) return;
+    try { await this.loadLib(); } catch (e) { this.status = 'offline'; this.refresh(); setTimeout(() => this.init(), 30000); return; }
+    if (this.sb) return;
+    this.sb = window.supabase.createClient(MED_CLOUD.url, MED_CLOUD.key, {auth: {persistSession: true, autoRefreshToken: true, storageKey: 'med_auth_' + MED_CLOUD.app}});
+    this.sb.auth.onAuthStateChange((ev, session) => {
+      this.user = session ? session.user : null;
+      if (ev === 'PASSWORD_RECOVERY') { this.recovery = true; setTimeout(() => go('account'), 50); }
+      this.refresh();
+    });
+    const r = await this.sb.auth.getSession();
+    this.user = r.data && r.data.session ? r.data.session.user : null;
+    this.status = this.user ? 'idle' : 'off';
+    this.refresh();
+    if (this.user) this.sync();
+    window.addEventListener('online', () => this.sync());
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') this.sync(); });
+    setInterval(() => { if (document.visibilityState === 'visible') this.sync(); }, 120000);
+  },
+  refresh() { // met à jour les petits indicateurs sans tout redessiner
+    try { renderNav(); } catch (e) { /* pas encore prêt */ }
+    const el = document.getElementById('acc-status'); if (el) el.innerHTML = this.statusHTML();
+    if (UI.view === 'account' && !document.querySelector('#view input:focus')) render();
+  },
+  statusText() {
+    if (!this.configured()) return tr('Bientôt disponible', 'Coming soon');
+    if (!this.user) return tr('Non connecté · données seulement sur cet appareil', 'Not signed in · data only on this device');
+    if (this.status === 'syncing') return tr('Synchronisation…', 'Syncing…');
+    if (this.status === 'offline') return tr('Hors ligne · synchronisation au retour de la connexion', 'Offline · will sync when back online');
+    if (this.status === 'error') return tr('Synchronisation en attente (nouvel essai bientôt)', 'Sync pending (retrying soon)');
+    return this.lastSync ? tr('Synchronisé à ', 'Synced at ') + new Date(this.lastSync).toLocaleTimeString(locale(), {hour: '2-digit', minute: '2-digit'}) : tr('Connecté', 'Signed in');
+  },
+  statusHTML() { const ok = this.user && this.status === 'idle'; return `<span class="acc-dot ${ok ? 'ok' : this.user ? 'wait' : ''}"></span>${esc(this.statusText())}`; },
+
+  changed() { if (!this.user) return; clearTimeout(this.timer); this.timer = setTimeout(() => this.sync(), 2500); },
+  async rpc(fn, args) { const r = await this.sb.rpc(fn, args); if (r.error) throw r.error; return r.data; },
+
+  /* ----- comptes ----- */
+  async signUp(email, pw, name) {
+    const r = await this.sb.auth.signUp({email: this.authEmail(email), password: pw, options: {data: {app: MED_CLOUD.app, name: name || '', email: String(email).trim().toLowerCase()}}});
+    if (r.error) throw r.error; if (!r.data.session) throw new Error('Email not confirmed');
+    this.user = r.data.user; await this.afterLogin();
+  },
+  async signIn(email, pw) {
+    const r = await this.sb.auth.signInWithPassword({email: this.authEmail(email), password: pw});
+    if (r.error) throw r.error; this.user = r.data.user; await this.afterLogin();
+  },
+  async afterLogin() {
+    const m = this.meta();
+    if (m.uid && m.uid !== this.user.id) {
+      // les données de cet appareil viennent d’un autre compte : on ne mélange pas
+      this.setMeta({uid: this.user.id, rev: 0, base: null, photos: {}, replace: true});
+    }
+    this.status = 'idle'; await this.sync(true);
+  },
+  async signOut(wipe) {
+    try { await this.sb.auth.signOut(); } catch (e) { /* hors ligne : la session locale est quand même effacée */ }
+    this.user = null; this.status = 'off'; this.lastSync = 0;
+    try { localStorage.removeItem(SYNC_META_KEY); } catch (e) {}
+    if (wipe) { try { localStorage.removeItem(STORE_KEY); } catch (e) {} await Photos.clear(); S = loadState(); }
+    render();
+  },
+  async deleteAccount() {
+    await this.rpc('med_delete_account', {p_app: MED_CLOUD.app});
+    await this.signOut(false);
+  },
+  errText(e) {
+    const m = String((e && (e.message || e.error_description || e.code)) || e || '');
+    if (/Invalid login credentials/i.test(m)) return tr('E-mail ou mot de passe incorrect.', 'Wrong e-mail or password.');
+    if (/already registered|already exists/i.test(m)) return tr('Un compte existe déjà avec cet e-mail : choisis « J’ai déjà un compte ».', 'An account already exists with this e-mail: choose “I already have an account”.');
+    if (/Password should be at least|weak/i.test(m)) return tr('Le mot de passe doit avoir au moins 8 caractères.', 'The password must have at least 8 characters.');
+    if (/Email not confirmed/i.test(m)) return tr('Compte créé mais pas encore activé (réglage du serveur). Préviens l’administrateur.', 'Account created but not yet active (server setting). Tell the administrator.');
+    if (/invalid format|valid email|Unable to validate email|email_address_invalid/i.test(m)) return tr('Cette adresse e-mail n’est pas valide.', 'This e-mail address is not valid.');
+    if (/Failed to fetch|NetworkError|network|Load failed|offline/i.test(m)) return tr('Pas de connexion internet.', 'No internet connection.');
+    if (/rate limit/i.test(m)) return tr('Trop d’essais : attends quelques minutes.', 'Too many attempts: wait a few minutes.');
+    if (/MED_APP/.test(m)) return tr('Ce compte appartient à une autre application.', 'This account belongs to another app.');
+    if (/does not exist|schema cache|Could not find the function/i.test(m)) return tr('Le serveur n’est pas encore prêt (script à lancer par l’administrateur).', 'The server is not ready yet (the administrator must run the setup script).');
+    return m || tr('Erreur inconnue', 'Unknown error');
+  },
+
+  /* ----- synchronisation ----- */
+  pick(st) { // ce qui part sur le serveur
+    const o = JSON.parse(JSON.stringify(st)); delete o.migratedFromV1;
+    if (o.settings) DEVICE_ONLY.forEach(k => delete o.settings[k]);
+    return o;
+  },
+  async sync(first) {
+    if (!this.user || !this.sb) return;
+    if (this.busy) { this.again = true; return; }
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) { this.status = 'offline'; this.refresh(); return; }
+    this.busy = true; this.status = 'syncing'; this.refresh();
+    try {
+      for (let tries = 0; tries < 4; tries++) {
+        const m = this.meta(); if (m.uid !== this.user.id) { m.uid = this.user.id; m.rev = 0; m.base = null; m.photos = {}; }
+        const remote = await this.rpc('med_pull', {p_app: MED_CLOUD.app}) || {};
+        const rRev = remote.rev || 0, rData = remote.data || null;
+        const local = this.pick(S);
+        let merged;
+        if (m.replace && rData) merged = rData;
+        else if (!rData) merged = local;
+        else if (rRev === m.rev) merged = local;
+        else merged = merge3(m.base || {}, local, rData);
+        if (!same(merged, local)) this.applyMerged(merged);
+        let rev = rRev;
+        if (!rData || !same(merged, rData)) {
+          rev = await this.rpc('med_push', {p_app: MED_CLOUD.app, p_data: merged, p_rev: rRev});
+          if (rev < 0) continue; // quelqu’un a écrit entre-temps : on recommence
+        }
+        delete m.replace; m.rev = rev; m.base = merged; this.setMeta(m);
+        break;
+      }
+      await this.syncPhotos();
+      this.status = 'idle'; this.lastSync = Date.now();
+    } catch (e) {
+      console.warn('Synchronisation', e);
+      this.status = /Failed to fetch|NetworkError|network|Load failed/i.test(String(e && e.message)) ? 'offline' : 'error';
+      if (/JWT|token|not authenticated|MED_AUTH/i.test(String(e && e.message))) { this.user = null; this.status = 'off'; }
+      setTimeout(() => this.sync(), 60000);
+    }
+    this.busy = false; this.refresh();
+    if (this.again) { this.again = false; this.sync(); }
+  },
+  applyMerged(merged) {
+    const keep = {}; DEVICE_ONLY.forEach(k => { keep[k] = S.settings[k]; });
+    const d = defaultState(); S = merged;
+    S.settings = {...d.settings, ...(S.settings || {}), ...keep};
+    for (const k of Object.keys(d)) if (S[k] === undefined) S[k] = d[k];
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(S)); } catch (e) {}
+    try { applyFont(); if (!document.querySelector('#view input:focus, #view textarea:focus, .modal.is-open')) render(); } catch (e) {}
+  },
+  async localPhotos() { // {id: {data, at}}
+    await Photos.open(); const out = {};
+    if (!Photos.db) return out;
+    const all = await new Promise(res => { const r = Photos.tx('readonly').getAll(); r.onsuccess = () => res(r.result || []); r.onerror = () => res([]); });
+    all.forEach(p => { if (p && p.id) out[p.id] = p; });
+    return out;
+  },
+  async syncPhotos() {
+    const m = this.meta(), known = m.photos || {};
+    const loc = await this.localPhotos();
+    const remote = {}; (await this.rpc('med_photo_list', {p_app: MED_CLOUD.app}) || []).forEach(r => { remote[r.id] = +r.at; });
+    let changed = false;
+    for (const id of Object.keys(loc)) {
+      const at = +loc[id].at || 1;
+      if (remote[id] === undefined && known[id] && known[id] >= at) { await Photos.del(id); delete known[id]; changed = true; continue; } // effacée ailleurs
+      if (remote[id] === undefined || at > remote[id]) { await this.rpc('med_photo_put', {p_app: MED_CLOUD.app, p_id: id, p_data: loc[id].data, p_at: at}); remote[id] = at; }
+      known[id] = Math.max(at, remote[id]);
+    }
+    for (const id of Object.keys(remote)) {
+      if (loc[id] && +loc[id].at >= remote[id]) continue;
+      if (!loc[id] && known[id]) { await this.rpc('med_photo_del', {p_app: MED_CLOUD.app, p_id: id}); delete known[id]; continue; } // effacée ici
+      const rows = await this.rpc('med_photo_get', {p_app: MED_CLOUD.app, p_id: id});
+      const row = Array.isArray(rows) ? rows[0] : rows;
+      if (row && row.data) { await Photos.set(id, row.data); await this.stampPhoto(id, remote[id]); known[id] = remote[id]; changed = true; }
+    }
+    m.photos = known; this.setMeta(m);
+    if (changed && UI.view === 'teach') render();
+  },
+  stampPhoto(id, at) { // garde la date du serveur pour ne pas renvoyer la photo
+    return new Promise(res => { if (!Photos.db) return res(); const r = Photos.tx('readwrite').put({id, data: Photos.urls[id], at}); r.onsuccess = r.onerror = () => res(); });
+  }
+};
+
+/* ----- Fusion à trois (base = dernière version synchronisée) ----- */
+function same(a, b) { return JSON.stringify(a) === JSON.stringify(b); }
+const isObj = x => x && typeof x === 'object' && !Array.isArray(x);
+const stamp = x => isObj(x) ? (+x.updatedAt || +x.createdAt || 0) : 0;
+function newer(l, r) { return stamp(r) > stamp(l) ? r : l; }
+function keyOf(arrName) { return arrName === 'quizResults' ? (x => JSON.stringify(x)) : (x => isObj(x) && x.id != null ? 'id:' + x.id : JSON.stringify(x)); }
+function mergeList(b, l, r, kf) {
+  const B = new Map((b || []).map(x => [kf(x), x])), L = new Map(l.map(x => [kf(x), x])), R = new Map(r.map(x => [kf(x), x]));
+  const out = [], seen = new Set();
+  const take = k => {
+    if (seen.has(k)) return; seen.add(k);
+    const bx = B.get(k), lx = L.get(k), rx = R.get(k), v = pick3(bx, lx, rx);
+    if (v !== undefined) out.push(v);
+  };
+  l.forEach(x => take(kf(x))); r.forEach(x => take(kf(x)));
+  return out;
+}
+function pick3(b, l, r) { // élément entier (une méditation, un enseignement…)
+  if (same(l, r)) return l;
+  if (same(b, l)) return r;
+  if (same(b, r)) return l;
+  if (l === undefined) return r; // effacé ici mais modifié ailleurs : on garde la version modifiée
+  if (r === undefined) return l;
+  return newer(l, r);
+}
+function merge3(b, l, r, name) {
+  if (same(l, r)) return l;
+  if (same(b, l)) return r;
+  if (same(b, r)) return l;
+  if (Array.isArray(l) && Array.isArray(r)) return mergeList(Array.isArray(b) ? b : [], l, r, keyOf(name));
+  if (isObj(l) && isObj(r) && !('id' in l)) {
+    const out = {}, bb = isObj(b) ? b : {};
+    for (const k of new Set([...Object.keys(l), ...Object.keys(r)])) {
+      const v = merge3(bb[k], l[k], r[k], k);
+      if (v !== undefined) out[k] = v;
+    }
+    return out;
+  }
+  return newer(l, r);
+}
+
+/* ----- Données venant de l’ancienne adresse de l’app ----- */
+const Migrate = {
+  async check() {
+    const h = location.hash || '';
+    if (!/^#(import=|demenagement)/.test(h)) return;
+    let data = null, photos = [];
+    if (h.startsWith('#import=')) {
+      try { data = JSON.parse(await gunzipB64(h.slice(8))); } catch (e) { console.warn(e); }
+    }
+    if (window.opener) { // l’ancienne adresse peut aussi envoyer les photos
+      const got = await new Promise(res => {
+        const t = setTimeout(() => res(null), 4000);
+        window.addEventListener('message', ev => { if (ev.origin !== (MED_CLOUD.oldOrigin || 'https://cnanmenibondja-spec.github.io') && ev.origin !== location.origin) return; if (ev.data && ev.data.type === 'med-migrate-data') { clearTimeout(t); res(ev.data); } });
+        try { window.opener.postMessage({type: 'med-migrate-ready'}, '*'); } catch (e) { res(null); }
+      });
+      if (got) { if (got.state) data = typeof got.state === 'string' ? JSON.parse(got.state) : got.state; photos = got.photos || []; }
+    }
+    try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {}
+    if (!data || !Array.isArray(data.meditations)) return toast(tr('Aucune donnée reçue de l’ancienne adresse. Utilise plutôt « Exporter » puis « Importer ».', 'No data received from the old address. Use “Export” then “Import” instead.'));
+    const n = data.meditations.length;
+    const empty = !S.meditations.length && !Object.keys(S.highlights || {}).length && !(S.bookmarks || []).length;
+    const apply = async () => {
+      const keepLang = S.settings.lang;
+      S = empty ? data : merge3({}, this.local(), Account.pick(data));
+      const d = defaultState(); S.settings = {...d.settings, ...(S.settings || {})}; if (!S.settings.lang) S.settings.lang = keepLang; S.settings.langChosen = true;
+      for (const k of Object.keys(d)) if (S[k] === undefined) S[k] = d[k];
+      save();
+      for (const p of photos) if (p && p.id && p.data) await Photos.set(p.id, p.data);
+      applyFont(); render();
+      toast(tr(`Données reçues : ${n} méditation(s). Tu peux maintenant installer l’app à sa nouvelle adresse.`, `Data received: ${n} meditation(s). You can now install the app at its new address.`));
+    };
+    confirmBox(empty ? tr(`Importer tes données de l’ancienne adresse (${n} méditation(s)) ?`, `Import your data from the old address (${n} meditation(s))?`) : tr(`Ajouter les données de l’ancienne adresse (${n} méditation(s)) à celles déjà présentes ici ?`, `Add the data from the old address (${n} meditation(s)) to what is already here?`), apply, tr('Importer', 'Import'));
+  },
+  local() { return Account.pick(S); }
+};
+async function gunzipB64(s) {
+  const bin = atob(s.replace(/-/g, '+').replace(/_/g, '/'));
+  const bytes = Uint8Array.from(bin, c => c.charCodeAt(0));
+  if (!('DecompressionStream' in window)) return new TextDecoder().decode(bytes);
+  try { const st = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip')); return await new Response(st).text(); }
+  catch (e) { return new TextDecoder().decode(bytes); }
+}
+
+/* ----- Écran « Mon compte » ----- */
+NAV.splice(NAV.findIndex(n => n.id === 'settings'), 0, {id: 'account', label: 'Mon compte', en: {label: 'My account'}, icon: 'user'});
+UI.acc = {mode: 'signup', err: '', busy: false};
+function privacyText() {
+  const app = MED_CLOUD.name || 'Méditons Ensemble';
+  return tr(`<p><b>${app} respecte ta vie privée.</b></p>
+<p><b>Ce qui est enregistré :</b> ton e-mail, ton prénom, ton mot de passe (chiffré, personne ne peut le lire) et le contenu que tu crées dans l’app (méditations, notes, surlignages, favoris, défis, enseignements, photos des rubriques).</p>
+<p><b>Pourquoi :</b> uniquement pour te permettre de retrouver tes données sur tes différents appareils. Aucune publicité, aucune revente, aucun partage avec d’autres personnes ou d’autres applications. Les autres utilisateurs ne voient jamais ton contenu.</p>
+<p><b>Où :</b> sur un serveur Supabase situé dans l’Union européenne, protégé pour que chaque compte n’accède qu’à ses propres données. Sans compte, tout reste uniquement sur ton appareil.</p>
+<p><b>Combien de temps :</b> tant que ton compte existe. Le bouton « Supprimer mon compte » efface immédiatement et définitivement ton compte et toutes tes données sur le serveur.</p>
+<p><b>Tes droits (RGPD) :</b> accès et copie (bouton « Exporter » dans Paramètres), rectification (dans l’app), effacement (« Supprimer mon compte »). Pour toute question : ${MED_CLOUD.contact ? `<a href="mailto:${esc(MED_CLOUD.contact)}">${esc(MED_CLOUD.contact)}</a>` : 'bouton « Donner mon avis »'}.</p>`,
+  `<p><b>${app} respects your privacy.</b></p>
+<p><b>What is stored:</b> your e-mail, your first name, your password (encrypted, nobody can read it) and the content you create in the app (meditations, notes, highlights, bookmarks, challenges, teachings, category photos).</p>
+<p><b>Why:</b> only so you can find your data on your different devices. No advertising, no selling, no sharing with other people or other apps. Other users never see your content.</p>
+<p><b>Where:</b> on a Supabase server located in the European Union, protected so that each account can only reach its own data. Without an account, everything stays only on your device.</p>
+<p><b>How long:</b> as long as your account exists. The “Delete my account” button immediately and permanently erases your account and all your data on the server.</p>
+<p><b>Your rights (GDPR):</b> access and copy (“Export” button in Settings), correction (in the app), erasure (“Delete my account”). For any question: ${MED_CLOUD.contact ? `<a href="mailto:${esc(MED_CLOUD.contact)}">${esc(MED_CLOUD.contact)}</a>` : '“Give feedback” button'}.</p>`);
+}
+VIEWS.account = () => {
+  const A = UI.acc, u = Account.user;
+  const head = `<div class="view-head"><div><div class="eyebrow">${tr('Ordinateur + téléphone', 'Computer + phone')}</div><h1>${tr('Mon compte', 'My account')}</h1></div></div>`;
+  const privacy = `<button class="link-btn" data-action="acc-privacy">${ic('lock')} ${tr('Confidentialité et données personnelles', 'Privacy and personal data')}</button>`;
+  if (!Account.configured()) return head + `<div class="panel acc-panel"><h2>${ic('cloud')} ${tr('Bientôt disponible', 'Coming soon')}</h2><p class="sec">${tr('Les comptes arrivent très bientôt. En attendant, tes données restent sur cet appareil : pense à « Exporter » une sauvegarde dans Paramètres.', 'Accounts are coming very soon. Meanwhile your data stays on this device: remember to “Export” a backup in Settings.')}</p></div>`;
+  if (Account.recovery && u) return head + `<div class="panel acc-panel"><h2>${tr('Nouveau mot de passe', 'New password')}</h2><div class="field"><input class="input" type="password" id="acc-newpw" autocomplete="new-password" placeholder="${tr('Au moins 8 caractères', 'At least 8 characters')}"></div><p class="acc-err" id="acc-err"></p><button class="btn btn-primary" data-action="acc-setpw">${tr('Enregistrer', 'Save')}</button></div>`;
+  if (u) {
+    const nm = (u.user_metadata && u.user_metadata.name) || '';
+    return head + `<div class="grid-2"><div class="panel acc-panel"><h2>${ic('user')} ${esc(nm || tr('Connecté', 'Signed in'))}</h2><p class="sec">${esc(Account.realEmail())}</p>
+      <p class="acc-status" id="acc-status">${Account.statusHTML()}</p>
+      <p class="help">${tr('Tes méditations, notes, surlignages, favoris, défis, enseignements et photos se synchronisent automatiquement entre tous les appareils où tu es connecté. Tout reste aussi sur cet appareil et marche sans internet.', 'Your meditations, notes, highlights, bookmarks, challenges, teachings and photos sync automatically across every device where you are signed in. Everything also stays on this device and works without internet.')}</p>
+      <div class="row"><button class="btn btn-primary" data-action="acc-sync">${ic('cloud')} ${tr('Synchroniser maintenant', 'Sync now')}</button><button class="btn btn-secondary" data-action="acc-logout">${tr('Se déconnecter', 'Sign out')}</button></div></div>
+      <div class="panel acc-panel"><h2>${ic('lock')} ${tr('Vie privée', 'Privacy')}</h2><p class="sec">${tr('Ton contenu est privé : seul ton compte peut le lire.', 'Your content is private: only your account can read it.')}</p>${privacy}
+      <div class="nav-sep" style="margin:16px 0"></div><button class="btn btn-danger" data-action="acc-delete">${ic('trash')} ${tr('Supprimer mon compte', 'Delete my account')}</button><p class="help">${tr('Efface ton compte et toutes tes données sur le serveur. Les données restent sur cet appareil.', 'Erases your account and all your data on the server. The data stays on this device.')}</p></div></div>`;
+  }
+  const su = A.mode === 'signup';
+  return head + `<div class="grid-2"><div class="panel acc-panel"><div class="seg acc-tabs"><button class="${su ? 'is-on' : ''}" data-action="acc-mode" data-mode="signup">${tr('Créer mon compte', 'Create my account')}</button><button class="${su ? '' : 'is-on'}" data-action="acc-mode" data-mode="login">${tr('J’ai déjà un compte', 'I already have an account')}</button></div>
+    <form id="acc-form" autocomplete="on">
+      ${su ? `<div class="field"><label class="label" for="acc-name">${tr('Prénom', 'First name')}</label><input class="input" id="acc-name" autocomplete="given-name" value="${esc(S.settings.name || '')}"></div>` : ''}
+      <div class="field"><label class="label" for="acc-email">E-mail</label><input class="input" type="email" id="acc-email" autocomplete="email" inputmode="email" required></div>
+      <div class="field"><label class="label" for="acc-pw">${tr('Mot de passe', 'Password')}</label><input class="input" type="password" id="acc-pw" autocomplete="${su ? 'new-password' : 'current-password'}" minlength="8" required>${su ? `<div class="help">${tr('Au moins 8 caractères.', 'At least 8 characters.')}</div>` : ''}</div>
+      ${su ? `<label class="acc-check"><input type="checkbox" id="acc-ok" required> <span>${tr('J’ai lu', 'I have read')} <a href="#" data-action="acc-privacy">${tr('la page confidentialité', 'the privacy page')}</a> ${tr('et j’accepte que mes données soient enregistrées pour les synchroniser.', 'and I agree that my data is stored to sync it.')}</span></label>` : ''}
+      <p class="acc-err" id="acc-err">${esc(A.err)}</p>
+      <button class="btn btn-primary" type="submit" ${A.busy ? 'disabled' : ''}>${su ? tr('Créer mon compte', 'Create my account') : tr('Me connecter', 'Sign in')}</button>
+      ${su ? '' : `<button type="button" class="link-btn" data-action="acc-forgot">${tr('Mot de passe oublié ?', 'Forgot password?')}</button>`}
+    </form></div>
+    <div class="panel acc-panel"><h2>${ic('cloud')} ${tr('Pourquoi un compte ?', 'Why an account?')}</h2><p class="sec">${tr('Avec un compte, tu retrouves sur ton téléphone ce que tu as fait sur ton ordinateur, et inversement. Ce que tu as déjà sur cet appareil est gardé et envoyé dans ton compte.', 'With an account, you find on your phone what you did on your computer, and the other way round. What you already have on this device is kept and sent to your account.')}</p>
+    <p class="help">${tr('Ce compte sert uniquement pour cette application.', 'This account is only for this app.')}</p>${privacy}</div></div>`;
+};
+AFTER.account = () => {
+  const f = $('#acc-form'); if (!f) return;
+  f.addEventListener('submit', async e => {
+    e.preventDefault();
+    const A = UI.acc, em = $('#acc-email').value.trim(), pw = $('#acc-pw').value, err = $('#acc-err');
+    if (!/^\S+@\S+\.\S+$/.test(em)) { err.textContent = tr('Écris une adresse e-mail valide.', 'Enter a valid e-mail address.'); return; }
+    if (pw.length < 8) { err.textContent = tr('Le mot de passe doit avoir au moins 8 caractères.', 'The password must have at least 8 characters.'); return; }
+    if (A.mode === 'signup' && !$('#acc-ok').checked) { err.textContent = tr('Coche la case pour accepter la page confidentialité.', 'Tick the box to accept the privacy page.'); return; }
+    const btn = f.querySelector('button[type=submit]'); btn.disabled = true; err.textContent = tr('Un instant…', 'One moment…');
+    try {
+      if (A.mode === 'signup') { const nm = ($('#acc-name').value || '').trim(); if (nm && !S.settings.name) { S.settings.name = nm; save(); } await Account.signUp(em, pw, nm); }
+      else await Account.signIn(em, pw);
+      A.err = ''; render(); toast(tr('Connecté : tes données se synchronisent', 'Signed in: your data is syncing'));
+    } catch (x) { err.textContent = Account.errText(x); btn.disabled = false; }
+  });
+};
+Object.assign(ACTIONS, {
+  'acc-mode': el => { UI.acc.mode = el.dataset.mode; UI.acc.err = ''; render(); },
+  'acc-privacy': (el, ev) => { if (ev) ev.preventDefault(); openModal({title: tr('Confidentialité', 'Privacy'), body: `<div class="prose acc-privacy">${privacyText()}</div>`, wide: true}); },
+  'acc-sync': () => Account.sync(),
+  'acc-logout': () => openModal({title: tr('Se déconnecter', 'Sign out'), body: `<p class="sec" style="line-height:1.6">${tr('Tes données restent dans ton compte. Veux-tu aussi les effacer de cet appareil (par exemple sur un appareil partagé) ?', 'Your data stays in your account. Do you also want to erase it from this device (for example on a shared device)?')}</p>`,
+    foot: `<button class="btn btn-secondary" id="lo-keep">${tr('Garder sur cet appareil', 'Keep on this device')}</button><button class="btn btn-danger" id="lo-wipe">${tr('Effacer de cet appareil', 'Erase from this device')}</button>`,
+    onMount: m => { m.querySelector('#lo-keep').onclick = () => { closeModal(); Account.signOut(false); }; m.querySelector('#lo-wipe').onclick = () => { closeModal(); Account.signOut(true); }; }}),
+  'acc-delete': () => confirmBox(tr('Supprimer définitivement ton compte et toutes tes données sur le serveur ? Cette action est irréversible. Les données restent sur cet appareil.', 'Permanently delete your account and all your data on the server? This cannot be undone. The data stays on this device.'),
+    async () => { try { await Account.deleteAccount(); toast(tr('Compte supprimé', 'Account deleted')); } catch (e) { toast(Account.errText(e)); } }, tr('Supprimer mon compte', 'Delete my account')),
+  'acc-forgot': async () => {
+    const em = ($('#acc-email').value || '').trim(), err = $('#acc-err');
+    if (!/^\S+@\S+\.\S+$/.test(em)) { err.textContent = tr('Écris d’abord ton e-mail ci-dessus.', 'First enter your e-mail above.'); return; }
+    try { const r = await Account.sb.auth.resetPasswordForEmail(Account.authEmail(em), {redirectTo: location.origin + location.pathname}); if (r.error) throw r.error;
+      err.textContent = tr('Si ce compte existe, un e-mail de réinitialisation est parti. S’il n’arrive pas, demande à l’administrateur de réinitialiser ton mot de passe.', 'If this account exists, a reset e-mail has been sent. If it does not arrive, ask the administrator to reset your password.');
+    } catch (e) { err.textContent = Account.errText(e); }
+  },
+  'acc-setpw': async () => {
+    const pw = $('#acc-newpw').value, err = $('#acc-err');
+    if (pw.length < 8) { err.textContent = tr('Au moins 8 caractères.', 'At least 8 characters.'); return; }
+    try { const r = await Account.sb.auth.updateUser({password: pw}); if (r.error) throw r.error; Account.recovery = false; render(); toast(tr('Mot de passe changé', 'Password changed')); }
+    catch (e) { err.textContent = Account.errText(e); }
+  },
+  'acc-banner-off': () => { S.settings.accBannerOff = true; save(); render(); }
+});
+/* Accueil : invitation à créer un compte (une seule fois, peut être fermée) */
+const _homeView = VIEWS.home;
+VIEWS.home = () => {
+  const b = Account.configured() && !Account.user && !S.settings.accBannerOff
+    ? `<div class="banner acc-banner">${ic('cloud')}<span><b>${tr('Retrouve tes méditations sur tous tes appareils', 'Find your meditations on all your devices')}</b><br><span class="muted" style="font-size:12.5px">${tr('Crée ton compte gratuit : ordinateur et téléphone restent synchronisés.', 'Create your free account: computer and phone stay in sync.')}</span></span><span class="spacer"></span><button class="btn btn-sm btn-primary" data-action="nav" data-view="account">${tr('Créer mon compte', 'Create my account')}</button><button class="btn btn-ghost btn-icon" data-action="acc-banner-off" aria-label="${tr('Fermer', 'Close')}">${ic('x')}</button></div>` : '';
+  return b + _homeView();
+};
+document.addEventListener('DOMContentLoaded', () => { setTimeout(() => { Account.init(); Migrate.check(); }, 0); });
+
+window.Account = Account;
 </script>
 </body>
 </html>
